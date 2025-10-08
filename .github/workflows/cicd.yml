@@ -1,23 +1,45 @@
-name: Deploy Flask App
+name: Deploy Flask App to Touge Server
 
 on:
   push:
     branches: [main]
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           
-      - name: Run Tests
+      - name: Install dependencies and run tests
         run: |
           pip install -r requirements.txt
           pip install pytest
           pytest tests/ -v
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Deploy to Server
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.TOUGE_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p ${{ secrets.TOUGE_SERVER_PORT }} ${{ secrets.TOUGE_SERVER_IP }} >> ~/.ssh/known_hosts
+          
+          ssh -p ${{ secrets.TOUGE_SERVER_PORT }} root@${{ secrets.TOUGE_SERVER_IP }} "
+            cd /root/flask-web-app
+            git pull origin main
+            pip3 install -r requirements.txt
+            supervisorctl restart flask-web-app
+            echo '部署成功'
+          "
