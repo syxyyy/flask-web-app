@@ -39,7 +39,7 @@ jobs:
           ssh-keyscan -p ${{ secrets.TOUGE_SERVER_PORT }} -H ${{ secrets.TOUGE_SERVER_IP }} >> ~/.ssh/known_hosts
           echo "SSH环境配置完成，尝试连接服务器..."
           
-          ssh -v -p ${{ secrets.TOUGE_SERVER_PORT }} -o HostKeyAlgorithms=+ssh-rsa -o PubkeyAcceptedAlgorithms=+ssh-rsa root@${{ secrets.TOUGE_SERVER_IP }} << 'EOF2'
+          ssh -v -p ${{ secrets.TOUGE_SERVER_PORT }} -o HostKeyAlgorithms=+ssh-rsa -o PubkeyAcceptedAlgorithms=+ssh-rsa root@${{ secrets.TOUGE_SERVER_IP }} << 'DEPLOY_EOF'
             set -e
             echo "成功连接服务器：\$(whoami)@\$(hostname)"
             
@@ -52,4 +52,4 @@ jobs:
             supervisorctl restart flask-web-app || { echo "应用重启失败"; exit 1; }
             supervisorctl status flask-web-app
             echo "部署完成"
-EOF2
+DEPLOY_EOF
